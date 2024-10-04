@@ -1,6 +1,8 @@
 import pandas as pd
 import torch.utils.data
 import os
+import torch
+from preprocessing import convert_sentence_to_char_sequence
 
 
 def load_data(similarity_threshold: float) -> pd.DataFrame:
@@ -10,12 +12,30 @@ def load_data(similarity_threshold: float) -> pd.DataFrame:
     return df
 
 
-def create_data_loader(df: pd.DataFrame) -> torch.utils.data.DataLoader | None:
+def create_data_loader(df: pd.DataFrame, complexity: str = "Easy", batch_size: int = 16) -> torch.utils.data.DataLoader:
+    sentence = convert_sentence_to_char_sequence(df[complexity])
+    typo_sentence = convert_sentence_to_char_sequence(df["typo_"+complexity])
 
-    return None
+    dataset = DataClass(typo_sentence, sentence)
+    loader = torch.utils.data.DataLoader(dataset, batch_size=batch_size, shuffle=False)
+
+    return loader
+
+
+class DataClass(torch.utils.data.Dataset):
+    def __init__(self, typo_sentence, target_sentence):
+        device = torch.device('cuda' if torch.cuda.is_available() else 'cpu')
+        self.typo_sentence = typo_sentence.to(device)
+        self.target_sentence = target_sentence.to(device)
+
+    def __len__(self):
+        return self.typo_sentence.shape[0]
+
+    def __getitem__(self, idx):
+        return self.typo_sentence[idx], self.target_sentence[idx]
 
 
 if __name__ == "__main__":
     os.chdir('..')
-    data_dict = load_data(0.8)
-    print(data_dict)
+    df = load_data(0.8)
+    create_data_loader(df)
