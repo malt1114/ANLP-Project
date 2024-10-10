@@ -2,12 +2,10 @@ import pandas as pd
 import torch.utils.data
 import os
 import torch
-from preprocessing import convert_sentence_to_char_sequence
+from scripts.preprocessing import convert_sentence_to_char_sequence
 
-
-def load_data(similarity_threshold: float) -> pd.DataFrame:
-    path = "data/raw/sscorpus/parawiki_english05"
-    df = pd.read_csv(path, sep="\t", names=["Hard", "Easy", "Similarity"])
+def load_data(similarity_threshold: float, file_path: str) -> pd.DataFrame:
+    df = pd.read_csv(file_path, sep="\t", names=["Hard", "Easy", "Similarity"])
     df = df[df["Similarity"] <= similarity_threshold]
     return df
 
@@ -33,9 +31,3 @@ class DataClass(torch.utils.data.Dataset):
 
     def __getitem__(self, idx):
         return self.typo_sentence[idx], self.target_sentence[idx]
-
-
-if __name__ == "__main__":
-    os.chdir('..')
-    df = load_data(0.8)
-    create_data_loader(df)
