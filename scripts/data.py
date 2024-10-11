@@ -7,6 +7,8 @@ from scripts.preprocessing import convert_sentence_to_char_sequence
 def load_data(similarity_threshold: float, file_path: str) -> pd.DataFrame:
     df = pd.read_csv(file_path, sep="\t", names=["Hard", "Easy", "Similarity"])
     df = df[df["Similarity"] <= similarity_threshold]
+    df = df.drop_duplicates('Hard')
+    df = df.drop_duplicates('Easy')
     return df
 
 

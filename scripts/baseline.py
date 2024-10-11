@@ -79,17 +79,28 @@ def get_predictions(list_of_sen: list, fre_dict: dict) -> list:
 
 def get_score(predictions: list, ground_truth: list):
     total_score = 0
+
+    #Word
+    total_token = 0
+    total_score_word = 0
+    
+    #For every sentence
     for sen_idx in range(len(predictions)):
-        y = ground_truth[sen_idx]
-        y_hat = predictions[sen_idx]
+        y = [i for i in ground_truth[sen_idx] if len(i) > 3]
+        y_hat = [i for i in predictions[sen_idx] if len(i) > 3]
+        #Total editdistance for sentence
         sentence_score = 0
         for w_idx in range(len(y)):
             sentence_score += calculate_edit_distance(pre_word = y_hat[w_idx], word = y[w_idx])
-        
+            
+        #on sentence level
         if sentence_score != 0:
             total_score += sentence_score/len(y)
-    
-    return total_score/len(predictions)
+        
+        #on word level
+        total_token += len(y)
+        total_score_word += sentence_score
+    return total_score/len(predictions), total_score_word/total_token
 
 def get_base_line_score(train: pd.DataFrame, test: pd.DataFrame, type: str) -> None:
     #Get stats
@@ -97,15 +108,14 @@ def get_base_line_score(train: pd.DataFrame, test: pd.DataFrame, type: str) -> N
     for sen in train[type].to_list():
         word_list += sentence_tokennizer(sen)
     fre_dict = create_frequent_dict(word_list)
-
+    
     #Prepare test data
     test_data = [sentence_tokennizer(sen) for sen in test[type+'_Typo'].to_list()]
     y_test = [sentence_tokennizer(sen) for sen in test[type].to_list()]
-    
+
     #Predict test data
     predictions = get_predictions(test_data, fre_dict)
 
     #Calculate score
-    score = get_score(predictions = predictions, ground_truth = y_test)
-    print(f"The base line has a mean word editdistance of {round(score,3)} pr. sentence")
-
+    sen_score, word_score = get_score(predictions = predictions, ground_truth = y_test)
+    print(f"The base line has a mean editdistance of {round(sen_score,3)} pr. sentence, and {round(word_score,3)} pr. word")
