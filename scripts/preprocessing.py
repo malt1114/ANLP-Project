@@ -33,7 +33,7 @@ def get_typoglycemia_modified_data(df: pd.DataFrame) -> pd.DataFrame:
         typo_hard.append(' '.join(hard))
 
     df['Easy_Typo'] = typo_easy
-    df['Hard_Typo'] = typo_easy
+    df['Hard_Typo'] = typo_hard
 
     return df
 

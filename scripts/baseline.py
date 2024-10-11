@@ -76,10 +76,12 @@ def get_score(predictions: list, ground_truth: list):
         y = ground_truth[sen_idx]
         y_hat = predictions[sen_idx]
         sentence_score = 0
-        for w_idx in range(len(y)):    
+        for w_idx in range(len(y)):
             sentence_score += calculate_edit_distance(pre_word = y_hat[w_idx], word = y[w_idx])
-        total_score += sentence_score/len(y)
-
+        
+        if sentence_score != 0:
+            total_score += sentence_score/len(y)
+    
     return total_score/len(predictions)
 
 def get_base_line_score(train: pd.DataFrame, test: pd.DataFrame, type: str) -> None:
