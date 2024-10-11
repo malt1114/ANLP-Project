@@ -3,6 +3,7 @@ import random
 import editdistance
 import pandas as pd
 import re
+import math
 random.seed(42)
 
 def order_string(word: str) -> str:
@@ -32,7 +33,13 @@ def calculate_edit_distance(pre_word: str, word: str):
     else:
         #Penalize for too long predictions e.g. f('ba', 'bane')/len('ba') = 1
         #And keep propotional score if too short or same len, e.g. f('bane', 'ba')/len('bane') = 0.5
-        return editdistance.eval(word, pre_word)/len(word)
+        
+        """#To get percentage of word that needs edit
+        score = editdistance.eval(word, pre_word)/len(word)
+        #Multiply by log
+        return score*math.log10(len(word))"""
+
+        return editdistance.eval(word, pre_word)
 
 def create_frequent_dict(word_list: list) -> dict:
     #Get word counts
@@ -99,6 +106,6 @@ def get_base_line_score(train: pd.DataFrame, test: pd.DataFrame, type: str) -> N
     predictions = get_predictions(test_data, fre_dict)
 
     #Calculate score
-    score = get_score(predictions = predictions, ground_truth = y_test)*100
-    print(f"The base line has a mean word editdistance of {round(score,3)}% pr. sentence")
+    score = get_score(predictions = predictions, ground_truth = y_test)
+    print(f"The base line has a mean word editdistance of {round(score,3)} pr. sentence")
 
