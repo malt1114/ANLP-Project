@@ -4,6 +4,9 @@ import editdistance
 import pandas as pd
 import re
 import math
+
+from scripts.preprocessing import sentence_tokennizer
+
 random.seed(42)
 
 def order_string(word: str) -> str:
@@ -17,19 +20,11 @@ def get_most_frequent_word(typo_word: str, fre_dict: dict) -> str:
     else:
         return '[UNK]'
 
-def sentence_tokennizer(sentence: str) -> list:
-    #Remove all non-alphabet chars
-    regex = re.compile('[^a-zA-Z ]')
-    sentence = regex.sub('', sentence)
-    sentence = sentence.lower()
-    sentence = sentence.split(' ')
-    #Remove empty strings
-    sentence = [i for i in sentence if len(i) != 0]
-    return sentence
+
 
 def calculate_edit_distance(pre_word: str, word: str):
     if pre_word == '[UNK]':
-        return 1
+        return len(word)
     else:
         #Penalize for too long predictions e.g. f('ba', 'bane')/len('ba') = 1
         #And keep propotional score if too short or same len, e.g. f('bane', 'ba')/len('bane') = 0.5
