@@ -29,23 +29,16 @@ def convert_numbers_to_words(sentence):
     return re.sub(r'\b\d+\b', lambda x: num2words(int(x.group())), sentence)
 
 
-def create_data_loader(df: pd.DataFrame, complexity: str = "Easy", batch_size: int = 16) -> torch.utils.data.DataLoader:
-    df[complexity] = df[complexity].apply(lambda x: ' '.join(preprocessing.sentence_tokennizer(x)))
-    df[complexity + "_Typo"] = df[complexity + "_Typo"].apply(lambda x: ' '.join(preprocessing.sentence_tokennizer(x)))
-
-    # Combine both columns into one series with all sentences
-    all_sentences = pd.concat([df[complexity], df[complexity + "_Typo"]])
-
-    # Get the length of the longest sentence
-    max_length = all_sentences.str.len().max()
-
+def create_data_loader(df: pd.DataFrame, complexity: str = "Easy", batch_size: int = 16, max_length=-1) -> torch.utils.data.DataLoader:
     sentence = convert_sentence_to_char_sequence(df[complexity], max_length)
     typo_sentence = convert_sentence_to_char_sequence(df[complexity + "_Typo"], max_length)
-
     dataset = DataClass(typo_sentence, sentence)
     loader = torch.utils.data.DataLoader(dataset, batch_size=batch_size, shuffle=False)
-
     return loader
+
+
+
+
 
 
 class DataClass(torch.utils.data.Dataset):

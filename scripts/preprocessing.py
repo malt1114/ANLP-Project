@@ -69,7 +69,7 @@ def convert_sentence_to_char_sequence(sentences: pd.Series, max_length: int) -> 
 
     for sentence_idx, sentence in enumerate(sentences):
         for char_idx, char in enumerate(sentence):
-            print(char, ord(char))
+            # print(char, ord(char))
             sequences[sentence_idx, char_idx] = char_to_index(char.lower())
 
     return torch.Tensor(sequences)
