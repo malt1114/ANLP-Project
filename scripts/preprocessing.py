@@ -63,17 +63,70 @@ def convert_sentence_to_char_sequence(sentences: pd.Series, max_length: int) -> 
         if 'a' <= char <= 'z':
             return ord(char) - ord('a') + 1
         if char == " ":
-            return ord(char)
+            # return ord(char)
+            return 26
         else:
             return 0
 
     for sentence_idx, sentence in enumerate(sentences):
         for char_idx, char in enumerate(sentence):
-            # print(char, ord(char))
-            sequences[sentence_idx, char_idx] = char_to_index(char.lower())
-
+            if char_idx < max_length:
+                sequences[sentence_idx, char_idx] = char_to_index(char.lower())
+            else:
+                break
     return torch.Tensor(sequences)
 
+
+def tokenize_dataframe(df: pd.DataFrame, complexity: str) -> pd.DataFrame:
+    df.loc[:, complexity] = df[complexity].apply(lambda x: ' '.join(sentence_tokennizer(x)))
+    df.loc[:, complexity + "_Typo"] = df[complexity + "_Typo"].apply(lambda x: ' '.join(sentence_tokennizer(x)))
+    return df
+
+
+import pandas as pd
+
+import pandas as pd
+import matplotlib.pyplot as plt
+import seaborn as sns
+
+
+def get_max_length(df: pd.DataFrame, complexity_level: str):
+    # Combine the relevant sentence columns
+    all_sentences = pd.concat([df[complexity_level], df[complexity_level + "_Typo"]])
+
+    lengths = all_sentences.str.len()
+
+    # Calculate statistics
+    max_length = lengths.max()
+    mean_length = lengths.mean()
+    std_length = lengths.std()
+    median_length = lengths.median()
+
+    # Calculate the five-number summary
+    min_length = lengths.min()
+    q1_length = lengths.quantile(0.25)  # First quartile
+    q3_length = lengths.quantile(0.75)  # Third quartile
+
+    # Print the five-number summary
+    print(
+        f"Five-number summary: Min: {min_length}, Q1: {q1_length}, Median: {median_length}, Q3: {q3_length}, Max: {max_length}")
+    print(f"Mean: {mean_length}, Std Dev: {std_length}")
+
+    # Plot the distribution of lengths
+    plt.figure(figsize=(10, 6))
+    sns.histplot(lengths, bins=30, kde=True, color='blue', stat='density', alpha=0.6)
+    plt.axvline(mean_length, color='red', linestyle='dashed', linewidth=1, label=f'Mean: {mean_length:.2f}')
+    plt.axvline(median_length, color='green', linestyle='dashed', linewidth=1, label=f'Median: {median_length:.2f}')
+    plt.axvline(q1_length, color='orange', linestyle='dashed', linewidth=1, label=f'Q1: {q1_length:.2f}')
+    plt.axvline(q3_length, color='purple', linestyle='dashed', linewidth=1, label=f'Q3: {q3_length:.2f}')
+
+    plt.title('Distribution of Sentence Lengths')
+    plt.xlabel('Length of Sentences')
+    plt.ylabel('Density')
+    plt.legend()
+    plt.show()
+
+    return max_length
 
 
 if __name__ == "__main__":
