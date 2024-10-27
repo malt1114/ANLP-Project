@@ -1,10 +1,11 @@
 import re
 
 import numpy as np
-import pandas as pd
 import torch
 import random
-
+import pandas as pd
+import matplotlib.pyplot as plt
+import seaborn as sns
 random.seed(42)
 
 
@@ -83,11 +84,7 @@ def tokenize_dataframe(df: pd.DataFrame, complexity: str) -> pd.DataFrame:
     return df
 
 
-import pandas as pd
 
-import pandas as pd
-import matplotlib.pyplot as plt
-import seaborn as sns
 
 
 def get_max_length(df: pd.DataFrame, complexity_level: str):
