@@ -10,16 +10,12 @@ random.seed(42)
 
 
 def shuffle_string(x: str) -> str:
-    # typo = x
-    # print(x)
-    # while typo == x: #To ensure that it does not return the same word
     s = x
     start, end = s[0], s[-1]
     s = list(s[1:-1])
     random.shuffle(s)
     s = ''.join(s)
     s = start + s + end
-    # typo = s
     return s
 
 
@@ -28,9 +24,8 @@ def get_typoglycemia_modified_data(df: pd.DataFrame) -> pd.DataFrame:
     typo_hard = []
 
     for idx, row in df.iterrows():
-        # print(idx)
-        easy = row['Easy'].split(' ')
-        hard = row['Hard'].split(' ')
+        easy = row['Easy'].replace('.', '').split(' ')
+        hard = row['Hard'].replace('.', '').split(' ')
 
         # shuffle words
         easy = [shuffle_string(i) if len(i) > 3 else i for i in easy]
@@ -55,19 +50,34 @@ def sentence_tokennizer(sentence: str) -> list:
     sentence = [i for i in sentence if len(i) != 0]
     return sentence
 
+def sentence_preproces(x:str) -> list:
+    #Remove all chars that is not a full stop, space or in the alphabet
+    x = re.sub('[^a-zA-Z\s\.]', '', x)
+    #Remove multiple dots
+    x = re.sub('\.{2,}', ' ', x)
+    #Remove . in acronymns
+    x = re.sub(r'\b([a-zA-Z]\.){2,}[a-zA-Z]\b', lambda y: y.group().replace('.', ''), x)
+    #Remove any lenght of spaces except 1
+    x = x = re.sub('\s{2,}', ' ', x)
+    return x.strip()
 
-def convert_sentence_to_char_sequence(sentences: pd.Series, max_length: int) -> torch.Tensor:
 
-    sequences = np.zeros((len(sentences), max_length)) - 1
+def char_to_index(char):
+    if 'a' <= char <= 'z':
+        return (ord(char) - ord('a') + 1)
+    if char == " ":
+        # return ord(char)
+        return 26
+    else:
+        return 0
+        
+def convert_sentence_to_char_sequence(sentences: pd.Series, max_length: int, target: bool) -> torch.Tensor:
 
-    def char_to_index(char):
-        if 'a' <= char <= 'z':
-            return ord(char) - ord('a') + 1
-        if char == " ":
-            # return ord(char)
-            return 26
-        else:
-            return 0
+    sequences = np.zeros((len(sentences), max_length), dtype= np.float32) - 1
+    
+    #If target keep it as a categorical value (int)
+    if target:
+        sequences = np.zeros((len(sentences), max_length)) - 1
 
     for sentence_idx, sentence in enumerate(sentences):
         for char_idx, char in enumerate(sentence):
@@ -75,17 +85,17 @@ def convert_sentence_to_char_sequence(sentences: pd.Series, max_length: int) -> 
                 sequences[sentence_idx, char_idx] = char_to_index(char.lower())
             else:
                 break
-    return torch.Tensor(sequences)
+    
+    #If not target, make it a float
+    if target == False:
+        sequences = sequences/100
 
+    return torch.Tensor(sequences)
 
 def tokenize_dataframe(df: pd.DataFrame, complexity: str) -> pd.DataFrame:
     df.loc[:, complexity] = df[complexity].apply(lambda x: ' '.join(sentence_tokennizer(x)))
     df.loc[:, complexity + "_Typo"] = df[complexity + "_Typo"].apply(lambda x: ' '.join(sentence_tokennizer(x)))
     return df
-
-
-
-
 
 def get_max_length(df: pd.DataFrame, complexity_level: str):
     # Combine the relevant sentence columns
