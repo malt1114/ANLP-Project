@@ -8,7 +8,6 @@ max_length = 150
 batch_size = 2**10
 
 input_size = 1  # Uses the raw index in alphabet as input
-hidden_size = 2**8 # Maps to hidden size
 output_size = 27 +  1  # Outputs probabilities for each character in vocabulary + padding
 num_layers = 1
 epochs = 100

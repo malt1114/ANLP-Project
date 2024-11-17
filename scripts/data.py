@@ -49,7 +49,5 @@ class DataClass(torch.utils.data.Dataset):
     def __getitem__(self, idx):
         return self.typo_sentence[idx], self.target_sentence[idx]
 
-
-
 if __name__ == "__main__":
     generate_typoglycemia_data_file(similarity_threshold=0.7, file_path="../data/raw/sscorpus")

@@ -62,12 +62,13 @@ def train_model(complexity_level, model, epochs, train_loader, validation_loader
             sentence_batch = sentence_batch.view(-1)
             typo_batch = typo_batch.reshape(-1, max_length, 1)
 
-            y = model.forward(typo_batch, train=False)  
+            y = model.forward(typo_batch)  
             loss = loss_function(y, sentence_batch)  
             loss.backward()
             optimizer.step()
             optimizer.zero_grad()
             epoch_loss += loss.item()
+
 
         epoch_loss_avg = epoch_loss / len(train_loader)
 
