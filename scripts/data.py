@@ -1,11 +1,8 @@
 import re
-from num2words import num2words
 import pandas as pd
 import torch.utils.data
 import os
 import torch
-from pycodestyle import maximum_doc_length
-from scripts.model  import device
 from scripts import preprocessing
 from scripts.preprocessing import convert_sentence_to_char_sequence, get_typoglycemia_modified_data, sentence_preproces
 
@@ -25,36 +22,25 @@ def generate_typoglycemia_data_file(similarity_threshold: float, file_path: str)
     df['Hard'] = df['Hard'].apply(sentence_preproces)
     df['Easy'] = df['Easy'].apply(sentence_preproces)
 
-    df['Hard'] = df['Hard'].apply(convert_numbers_to_words)
-    df['Easy'] = df['Easy'].apply(convert_numbers_to_words)
-
-    df = get_typoglycemia_modified_data(df)
-    df.reset_index(inplace=True, drop=True)
-    df.to_csv("data/processed/sscorpus.csv", index=False)
-
-
-def convert_numbers_to_words(sentence):
-    return re.sub(r'\b\d+\b', lambda x: num2words(int(x.group())), sentence)
+    for t in ['Hard', 'Easy']:
+        t_df = get_typoglycemia_modified_data(df, level = t)
+        t_df.reset_index(inplace=True, drop=True)
+        t_df.to_csv(f"data/processed/{t.lower()}/sscorpus_{t.lower()}.csv", index=False)
 
 
 def create_data_loader(df: pd.DataFrame, complexity: str = "Easy", batch_size: int = None, max_length: int = None) -> torch.utils.data.DataLoader:
-    # sentence = convert_sentence_to_char_sequence(df[complexity], max_length).view(-1, batch_size * max_length)
-    # typo_sentence = convert_sentence_to_char_sequence(df[complexity + "_Typo"], max_length).reshape(-1, max_length, 1)
     sentence = convert_sentence_to_char_sequence(df[complexity], max_length, target = True)
-    typo_sentence = convert_sentence_to_char_sequence(df[complexity + "_Typo"], max_length, target = False)
+    typo_sentence = convert_sentence_to_char_sequence(df['typoglycemia'], max_length, target = False)
     dataset = DataClass(typo_sentence, sentence, max_length, batch_size)
-    loader = torch.utils.data.DataLoader(dataset, batch_size=batch_size, shuffle=False)
+    loader = torch.utils.data.DataLoader(dataset, batch_size=batch_size, shuffle=True)
     return loader
 
-
-
-
-
+device = torch.device('cuda' if torch.cuda.is_available() else 'cpu')
 
 class DataClass(torch.utils.data.Dataset):
     def __init__(self, typo_sentence, target_sentence, max_length, batch_size):
-        self.typo_sentence = typo_sentence.to(device)
-        self.target_sentence = target_sentence.long().to(device)
+        self.typo_sentence = typo_sentence
+        self.target_sentence = target_sentence.long()
         self.max_length = max_length
         self.batch_size = batch_size
     def __len__(self):
@@ -67,4 +53,3 @@ class DataClass(torch.utils.data.Dataset):
 
 if __name__ == "__main__":
     generate_typoglycemia_data_file(similarity_threshold=0.7, file_path="../data/raw/sscorpus")
-

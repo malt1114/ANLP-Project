@@ -105,7 +105,7 @@ def get_base_line_score(train: pd.DataFrame, test: pd.DataFrame, type: str) -> N
     fre_dict = create_frequent_dict(word_list)
     
     #Prepare test data
-    test_data = [sentence_tokennizer(sen) for sen in test[type+'_Typo'].to_list()]
+    test_data = [sentence_tokennizer(sen) for sen in test['typoglycemia'].to_list()]
     y_test = [sentence_tokennizer(sen) for sen in test[type].to_list()]
 
     #Predict test data
