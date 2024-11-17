@@ -111,3 +111,6 @@ def train_model(complexity_level, model, epochs, train_loader, validation_loader
             f.write(f'{epoch + 1},{epoch_loss_avg:.8f},{val_loss_avg:.8f}\n')
         
         print(f"Epoch {epoch + 1}/{epochs} Train Loss: {epoch_loss_avg:.8f} Val Loss: {val_loss_avg:.8f}", flush= True)
+
+if __name__ == "__main__":
+    print('hello')
