@@ -15,26 +15,27 @@ output_size = 27 +  1  # Outputs probabilities for each character in vocabulary 
 num_layers = 1
 epochs = 1000
 
-#Create stat file
-with open(f'models/{complexity_level.lower()}/stats.csv', 'a') as f:
-    f.write(f'Epoch,Train_loss,Val_loss\n')
-
-
-train_loader, validation_loader, test_loader = prepare_data(complexity_level = complexity_level,
-                                                            max_length = max_length,
-                                                            batch_size = batch_size)
-
-
 model = CharBiLSTM(input_size, hidden_size, output_size, num_layers, max_length, batch_size).to(device)
 # Padding is value -1, therefore we want to ignore it in our loss function
 loss_function = torch.nn.CrossEntropyLoss(ignore_index=-1).to(device)
 optimizer = torch.optim.Adam(model.parameters(), lr=0.001)
-print(f'Training of {complexity_level} started', flush= True)
-train_model(complexity_level,
-            model, 
-            epochs, 
-            train_loader, 
-            validation_loader, 
-            max_length, 
-            loss_function, 
-            optimizer)
+
+if __name__ == "__main__":
+
+    #Create stat file
+    with open(f'models/{complexity_level.lower()}/stats.csv', 'a') as f:
+        f.write(f'Epoch,Train_loss,Val_loss\n')
+
+    train_loader, validation_loader, test_loader = prepare_data(complexity_level = complexity_level,
+                                                                max_length = max_length,
+                                                                batch_size = batch_size)
+
+    print(f'Training of {complexity_level} started', flush= True)
+    train_model(complexity_level,
+                model,
+                epochs,
+                train_loader,
+                validation_loader,
+                max_length,
+                loss_function,
+                optimizer)
