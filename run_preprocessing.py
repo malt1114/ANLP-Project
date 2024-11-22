@@ -13,8 +13,8 @@ for i in ['Easy', 'Hard']:
     df = df[[i, 'typoglycemia']]
 
     #Create train, test val and save as files
-    dev, test = train_test_split(df, test_size=0.2)
-    train, validation = train_test_split(dev, test_size=0.2)
+    dev, test = train_test_split(df, test_size=0.2, shuffle= True)
+    train, validation = train_test_split(dev, test_size=0.2, shuffle= True)
     
     test.reset_index(inplace=True, drop=True)
     test.to_csv(f"data/processed/{i.lower()}/test_{i.lower()}.csv", index=False)
