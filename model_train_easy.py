@@ -11,7 +11,7 @@ batch_size = 2**9
 
 input_size = 1  # Uses the raw index in alphabet as input
 hidden_size = 2**9 # Maps to hidden size
-output_size = 27 +  1  # Outputs probabilities for each character in vocabulary + padding
+output_size = 28 +  1  # Outputs probabilities for each character in vocabulary + padding
 num_layers = 1
 epochs = 1000
 
