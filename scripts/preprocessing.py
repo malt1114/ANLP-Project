@@ -67,18 +67,17 @@ def char_to_index(char):
     if 'a' <= char <= 'z':
         return (ord(char) - ord('a') + 1)
     if char == " ":
-        # return ord(char)
-        return 26
+        return 27
     else:
         return 0
         
 def convert_sentence_to_char_sequence(sentences: pd.Series, max_length: int, target: bool) -> torch.Tensor:
 
-    sequences = np.zeros((len(sentences), max_length), dtype= np.float32) - 1
+    sequences = np.zeros((len(sentences), max_length), dtype= np.float32)
     
     #If target keep it as a categorical value (int)
     if target:
-        sequences = np.zeros((len(sentences), max_length)) - 1
+        sequences = np.zeros((len(sentences), max_length))
 
     for sentence_idx, sentence in enumerate(sentences):
         for char_idx, char in enumerate(sentence):
@@ -139,7 +138,8 @@ def get_max_length(df: pd.DataFrame, complexity_level: str):
 
 
 if __name__ == "__main__":
-    sentences = pd.Series(["Hello world", "test sentence"])
+    sentences = pd.Series(["he was arrested in switzerland in september", "test "])
     # sentences = pd.Series(["Hello world"])
-    tensor_output = convert_sentence_to_char_sequence(sentences, 30)
+    tensor_output = convert_sentence_to_char_sequence(sentences, 151, target=False)
+    tensor_output *= 100
     print(tensor_output)
