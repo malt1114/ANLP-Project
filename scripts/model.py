@@ -48,7 +48,6 @@ def train_model(complexity_level, model, epochs, train_loader, validation_loader
 
     BEST_VAL_LOSS = float("inf")
     LAST_SAVED = 0
-    scheduler = optim.lr_scheduler.StepLR(optimizer, step_size=30, gamma=0.1)
     
     for epoch in range(epochs):
         model.train()
@@ -57,10 +56,11 @@ def train_model(complexity_level, model, epochs, train_loader, validation_loader
             typo_batch, sentence_batch = batch  
             
             typo_batch = typo_batch.to(device)
-            sentence_batch =sentence_batch.to(device)
-
-            sentence_batch = sentence_batch.view(-1)
             typo_batch = typo_batch.reshape(-1, max_length, 1)
+
+            sentence_batch = sentence_batch.to(device)
+            sentence_batch = sentence_batch.view(-1, max_length, 1)
+            sentence_batch = sentence_batch.reshape(-1)
 
             y = model.forward(typo_batch)  
             loss = loss_function(y, sentence_batch)  
@@ -68,7 +68,6 @@ def train_model(complexity_level, model, epochs, train_loader, validation_loader
             optimizer.step()
             optimizer.zero_grad()
             epoch_loss += loss.item()
-
 
         epoch_loss_avg = epoch_loss / len(train_loader)
 
@@ -78,20 +77,20 @@ def train_model(complexity_level, model, epochs, train_loader, validation_loader
         with torch.no_grad():  
             for val_batch in validation_loader:
                 typo_val_batch, sentence_val_batch = val_batch
-                
+
                 typo_val_batch = typo_val_batch.to(device)
-                sentence_val_batch = sentence_val_batch.to(device)
-                
-                sentence_val_batch = sentence_val_batch.view(-1)
                 typo_val_batch = typo_val_batch.reshape(-1, max_length, 1)
                 
-                val_y = model.forward(typo_val_batch, train=False)
+                sentence_val_batch = sentence_val_batch.to(device)
+                sentence_val_batch = sentence_val_batch.view(-1, max_length, 1)
+                sentence_val_batch = sentence_val_batch.reshape(-1)
+                
+                val_y = model.forward(typo_val_batch)
                 
                 val_loss_batch = loss_function(val_y, sentence_val_batch)
                 val_loss += val_loss_batch.item()
                     
         val_loss_avg = val_loss / len(validation_loader)
-        scheduler.step()
 
         #Save if loss is the lowest yet
         if val_loss_avg < BEST_VAL_LOSS:
@@ -104,7 +103,7 @@ def train_model(complexity_level, model, epochs, train_loader, validation_loader
         
         #Save if have not been save for 20 epochs
         if LAST_SAVED - 20 == 0:
-            model_path = f'models/{complexity_level}/model_{epoch + 1}.pt'
+            model_path = f'models/{complexity_level.lower()}/model_{epoch + 1}.pt'
             torch.save(model.state_dict(), model_path)
             LAST_SAVED = 0
         
@@ -112,6 +111,3 @@ def train_model(complexity_level, model, epochs, train_loader, validation_loader
             f.write(f'{epoch + 1},{epoch_loss_avg:.8f},{val_loss_avg:.8f}\n')
         
         print(f"Epoch {epoch + 1}/{epochs} Train Loss: {epoch_loss_avg:.8f} Val Loss: {val_loss_avg:.8f}", flush= True)
-
-if __name__ == "__main__":
-    print('hello')

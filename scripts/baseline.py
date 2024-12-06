@@ -72,6 +72,8 @@ def get_score(predictions: list, ground_truth: list):
 
     word_stats = {}
     score_data = []
+    total_score_words = 0
+    num_of_words = 0 
     #For every sentence
     for sen_idx in range(len(predictions)):
         y = [i for i in ground_truth[sen_idx]]
@@ -89,14 +91,19 @@ def get_score(predictions: list, ground_truth: list):
             word_stats[y[w_idx]]['score_sum'] = ed + word_stats[y[w_idx]]['score_sum']
             #update count
             word_stats[y[w_idx]]['count'] = 1 + word_stats[y[w_idx]]['count']
-
+            #Add to sentence level
             words.append(ed)
+            #Add to word level
+            total_score_words += ed
+            num_of_words += 1
             
         #on sentence level
         if sentence_score != 0:
             sentence_score = sentence_score/len(y)
         score_data.append([sentence_score, words])
-    return score_data, word_stats
+
+    avg_word = total_score_words/num_of_words
+    return score_data, word_stats, avg_word
 
 def get_base_line_score(train: pd.DataFrame, test: pd.DataFrame, type: str) -> None:
     #Get stats
@@ -113,12 +120,15 @@ def get_base_line_score(train: pd.DataFrame, test: pd.DataFrame, type: str) -> N
     predictions = get_predictions(test_data, fre_dict)
 
     #Calculate score
-    score_data, word_stats = get_score(predictions = predictions, ground_truth = y_test)
+    score_data, word_stats, avg_word = get_score(predictions = predictions, ground_truth = y_test)
     score_data = pd.DataFrame(score_data, columns= ['Avg sentence', 'Words'])
-    print(f"The base line has a mean editdistance of {round(score_data['Avg sentence'].mean(),3)} pr. sentence")
-
+    #Multiply with 100 to get percentage
+    print(f"The {type} baseline has a mean editdistance of {round(score_data['Avg sentence'].mean()*100,3)}% pr. sentence")
+    print(f"The {type} baseline has a mean editdistance of {round(avg_word*100,3)}% pr. word")
     word_performance = []
     for key, value in word_stats.items():
         word_performance.append([key, len(key), value['count'], value['score_sum']])
     word_performance = pd.DataFrame(word_performance, columns= ['word', 'len', 'freq', 'total_score'])
+    word_performance['avg'] = word_performance['total_score']/word_performance['freq']
+    word_performance = word_performance[['word', 'len', 'freq', 'avg']]
     word_performance.to_csv(f'analysis/{type}_baseline_stats.csv')
