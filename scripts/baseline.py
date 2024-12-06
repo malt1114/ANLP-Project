@@ -118,7 +118,7 @@ def get_base_line_score(train: pd.DataFrame, test: pd.DataFrame, type: str) -> N
 
     #Predict test data
     predictions = get_predictions(test_data, fre_dict)
-
+    print(predictions)
     #Calculate score
     score_data, word_stats, avg_word = get_score(predictions = predictions, ground_truth = y_test)
     score_data = pd.DataFrame(score_data, columns= ['Avg sentence', 'Words'])
