@@ -24,17 +24,12 @@ def get_most_frequent_word(typo_word: str, fre_dict: dict) -> str:
 
 def calculate_edit_distance(pre_word: str, word: str):
     if pre_word == '[UNK]':
-        return len(word)
+        return 1
     else:
         #Penalize for too long predictions e.g. f('ba', 'bane')/len('ba') = 1
         #And keep propotional score if too short or same len, e.g. f('bane', 'ba')/len('bane') = 0.5
         
-        """#To get percentage of word that needs edit
-        score = editdistance.eval(word, pre_word)/len(word)
-        #Multiply by log
-        return score*math.log10(len(word))"""
-
-        return editdistance.eval(word, pre_word)
+        return editdistance.eval(word, pre_word)/len(word)
 
 def create_frequent_dict(word_list: list) -> dict:
     #Get word counts
@@ -43,6 +38,7 @@ def create_frequent_dict(word_list: list) -> dict:
     fre_dict = {}
     #score dict 
     scores = {}
+
     #Assign most frequent word
     for word, count in word_count.items():
         word_sorted = order_string(word)
@@ -73,29 +69,34 @@ def get_predictions(list_of_sen: list, fre_dict: dict) -> list:
     return predictions
 
 def get_score(predictions: list, ground_truth: list):
-    total_score = 0
 
-    #Word
-    total_token = 0
-    total_score_word = 0
-    
+    word_stats = {}
+    score_data = []
     #For every sentence
     for sen_idx in range(len(predictions)):
-        y = [i for i in ground_truth[sen_idx] if len(i) > 3]
-        y_hat = [i for i in predictions[sen_idx] if len(i) > 3]
+        y = [i for i in ground_truth[sen_idx]]
+        y_hat = [i for i in predictions[sen_idx]]
         #Total editdistance for sentence
         sentence_score = 0
+        words = []
         for w_idx in range(len(y)):
-            sentence_score += calculate_edit_distance(pre_word = y_hat[w_idx], word = y[w_idx])
+            if y[w_idx] not in word_stats:
+                word_stats[y[w_idx]] = {'count':0, 'score_sum': 0}
+            #get edit distance
+            ed = calculate_edit_distance(pre_word = y_hat[w_idx], word = y[w_idx])
+            #add edit distance
+            sentence_score += ed
+            word_stats[y[w_idx]]['score_sum'] = ed + word_stats[y[w_idx]]['score_sum']
+            #update count
+            word_stats[y[w_idx]]['count'] = 1 + word_stats[y[w_idx]]['count']
+
+            words.append(ed)
             
         #on sentence level
         if sentence_score != 0:
-            total_score += sentence_score/len(y)
-        
-        #on word level
-        total_token += len(y)
-        total_score_word += sentence_score
-    return total_score/len(predictions), total_score_word/total_token
+            sentence_score = sentence_score/len(y)
+        score_data.append([sentence_score, words])
+    return score_data, word_stats
 
 def get_base_line_score(train: pd.DataFrame, test: pd.DataFrame, type: str) -> None:
     #Get stats
@@ -112,5 +113,12 @@ def get_base_line_score(train: pd.DataFrame, test: pd.DataFrame, type: str) -> N
     predictions = get_predictions(test_data, fre_dict)
 
     #Calculate score
-    sen_score, word_score = get_score(predictions = predictions, ground_truth = y_test)
-    print(f"The base line has a mean editdistance of {round(sen_score,3)} pr. sentence, and {round(word_score,3)} pr. word")
+    score_data, word_stats = get_score(predictions = predictions, ground_truth = y_test)
+    score_data = pd.DataFrame(score_data, columns= ['Avg sentence', 'Words'])
+    print(f"The base line has a mean editdistance of {round(score_data['Avg sentence'].mean(),3)} pr. sentence")
+
+    word_performance = []
+    for key, value in word_stats.items():
+        word_performance.append([key, len(key), value['count'], value['score_sum']])
+    word_performance = pd.DataFrame(word_performance, columns= ['word', 'len', 'freq', 'total_score'])
+    word_performance.to_csv(f'analysis/{type}_baseline_stats.csv')
