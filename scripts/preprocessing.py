@@ -85,7 +85,7 @@ def convert_sentence_to_char_sequence(sentences: pd.Series, max_length: int, tar
                 sequences[sentence_idx, char_idx] = char_to_index(char.lower())
             else:
                 break
-        sequences[sentence_idx, char_idx+1] = 27
+        sequences[sentence_idx, char_idx+1] = 28
     
     #If not target, make it a float
     if target == False:

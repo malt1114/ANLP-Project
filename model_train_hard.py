@@ -11,31 +11,31 @@ batch_size = 2**9
 
 input_size = 1  # Uses the raw index in alphabet as input
 hidden_size = 2**9 # Maps to hidden size
-output_size = 28 +  1  # Outputs probabilities for each character in vocabulary + padding
+output_size = 27 + 2  # Outputs probabilities for each character in vocabulary + padding and stop token
 num_layers = 1
 epochs = 1000
 
+#Create stat file
+with open(f'models/{complexity_level.lower()}/stats.csv', 'a') as f:
+    f.write(f'Epoch,Train_loss,Val_loss\n')
+
+
+train_loader, validation_loader, test_loader = prepare_data(complexity_level = complexity_level,
+                                                            max_length = max_length,
+                                                            batch_size = batch_size)
+
+
 model = CharBiLSTM(input_size, hidden_size, output_size, num_layers, max_length, batch_size).to(device)
-# Padding is value -1, therefore we want to ignore it in our loss function
+
+# Padding is value 0, therefore we want to ignore it in our loss function
 loss_function = torch.nn.CrossEntropyLoss(ignore_index=0).to(device)
 optimizer = torch.optim.Adam(model.parameters(), lr=0.001)
-
-if __name__ == "__main__":
-
-    #Create stat file
-    with open(f'models/{complexity_level.lower()}/stats.csv', 'a') as f:
-        f.write(f'Epoch,Train_loss,Val_loss\n')
-
-    train_loader, validation_loader, test_loader = prepare_data(complexity_level = complexity_level,
-                                                                max_length = max_length,
-                                                                batch_size = batch_size)
-
-    print(f'Training of {complexity_level} started', flush= True)
-    train_model(complexity_level,
-                model,
-                epochs,
-                train_loader,
-                validation_loader,
-                max_length,
-                loss_function,
-                optimizer)
+print(f'Training of {complexity_level} started', flush= True)
+train_model(complexity_level,
+            model, 
+            epochs, 
+            train_loader, 
+            validation_loader, 
+            max_length, 
+            loss_function, 
+            optimizer)
